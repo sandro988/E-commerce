@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # 3rd party apps
     "rest_framework",
+    "rest_framework.authtoken",
+    "dj_rest_auth",
     "phonenumber_field",
+    "drf_spectacular",
     # Local apps
     "accounts.apps.AccountsConfig",
     # Django cleanup
@@ -141,3 +144,28 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Default country code for user phonenumber
 PHONENUMBER_DEFAULT_REGION = "GE"
+
+# dj-rest-auth, restframework and drf-spectacular settings
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+REST_AUTH = {
+    "LOGIN_SERIALIZER": "accounts.serializers.CustomLoginSerializer",
+    "USER_DETAILS_SERIALIZER": "accounts.serializers.CustomUserDetailsSerializer",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Varmylo - E-commerce project",
+    "DESCRIPTION": """RESTful API for a E-commerce website where registered users 
+    can buy items or sell them.""",
+    "VERSION": "1.0.0",
+    "COMPONENT_SPLIT_REQUEST": True,
+}
