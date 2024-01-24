@@ -49,6 +49,72 @@ class SignUpTests(APITestCase):
         self.assertEqual(User.objects.count(), 0)
 
 
+class AuthenticationTests(APITestCase):
+    def setUp(self):
+        self.signup_url = reverse("signup_api_view")
+        self.login_url = reverse("login_api_view")
+        self.logout_url = reverse("logout_api_view")
+
+        self.correct_user_data = {
+            "email": "test_user@email.com",
+            "password": "test_pass",
+        }
+        self.incorrect_user_data = {
+            "email": "test_user@email.com",
+            "password": "incorrect_test_pass",
+        }
+
+    def test_login_user(self):
+        # creating an account for user
+        signup_response = self.client.post(
+            self.signup_url,
+            self.correct_user_data,
+            format="json",
+        )
+
+        self.assertEqual(signup_response.status_code, status.HTTP_201_CREATED)
+
+        login_response = self.client.post(
+            self.login_url,
+            self.correct_user_data,
+            format="json",
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+        self.assertIn("key", login_response.data)
+
+    def test_login_user_with_incorrect_data(self):
+        # creating an account for user
+        signup_response = self.client.post(
+            self.signup_url,
+            self.correct_user_data,
+            format="json",
+        )
+        self.assertEqual(signup_response.status_code, status.HTTP_201_CREATED)
+
+        login_response = self.client.post(
+            self.login_url,
+            self.incorrect_user_data,
+            format="json",
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_logout_user(self):
+        self.client.post(self.signup_url, self.correct_user_data, format="json")
+        self.client.post(self.login_url, self.incorrect_user_data, format="json")
+        logout_response = self.client.post(self.logout_url)
+
+        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
+        self.assertIn("detail", logout_response.data)
+        self.assertEqual(logout_response.data.get("detail"), "Successfully logged out.")
+        self.assertEqual(
+            self.client.get(
+                reverse("user_details_api_view"),
+                format="json",
+            ).status_code,
+            status.HTTP_401_UNAUTHORIZED,
+        )
+
+
 class UserDetailViewTests(APITestCase):
     @classmethod
     def setUpTestData(cls) -> None:
