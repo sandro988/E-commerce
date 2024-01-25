@@ -174,6 +174,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": """RESTful API for an E-commerce website where registered users can buy items or sell them.""",
     "VERSION": "1.0.0",
     "COMPONENT_SPLIT_REQUEST": True,
+    "SORT_OPERATIONS": False,
 }
 
 # corsheaders settings
