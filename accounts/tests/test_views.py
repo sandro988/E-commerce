@@ -457,3 +457,98 @@ class UserDetailViewTests(APITestCase):
         self.assertNotEqual(
             User.objects.last().full_name, self.put_request_data["full_name"]
         )
+
+
+class PasswordChangeTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.user = User.objects.create_user(
+            email="test_user@email.com",
+            password="test_pass",
+            full_name="John Doe",
+            phone_number="+1-202-555-0142",
+            birthdate="1998-08-18",
+            address="United States, Florida, Opa-locka, 3990 NW 132nd St",
+            preferred_currency="USD",
+            is_verified=True,
+        )
+
+    def setUp(self) -> None:
+        user_data = {
+            "email": "test_user@email.com",
+            "password": "test_pass",
+        }
+        self.password_change_data = {
+            "old_password": "test_pass",
+            "new_password1": "new_password_123",
+            "new_password2": "new_password_123",
+        }
+
+        self.password_change_url = reverse("password_change_api_view")
+        self.login_url = reverse("login_api_view")
+        self.client = APIClient()
+
+        # First signing user in
+        login_response = self.client.post(
+            self.login_url,
+            user_data,
+            format="json",
+        )
+        token_key = login_response.data.get("key")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token_key}")
+
+    def test_password_change_view(self):
+        response = self.client.post(
+            self.password_change_url,
+            self.password_change_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("detail", response.data)
+        self.assertEqual(response.data.get("detail"), "New password has been saved.")
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertTrue(updated_user.check_password("new_password_123"))
+
+    def test_password_change_with_incorrect_old_password(self):
+        self.password_change_data["old_password"] = "incorrect_old_password"
+        response = self.client.post(
+            self.password_change_url,
+            self.password_change_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Password should not change.
+        user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(user.check_password("new_password_123"))
+        self.assertTrue(user.check_password("test_pass"))
+
+    def test_password_change_with_non_matching_new_passwords(self):
+        self.password_change_data["new_password2"] = "new_password_123456789"
+        response = self.client.post(
+            self.password_change_url,
+            self.password_change_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Password should not change.
+        user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(user.check_password("new_password_123"))
+        self.assertFalse(user.check_password("new_password_123456789"))
+        self.assertTrue(user.check_password("test_pass"))
+
+    def test_password_change_with_unauthenticated_user(self):
+        self.client.post(reverse("logout_api_view"))
+        response = self.client.post(
+            self.password_change_url,
+            self.password_change_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # Password should not change.
+        user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(user.check_password("new_password_123"))
+        self.assertTrue(user.check_password("test_pass"))

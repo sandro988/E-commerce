@@ -1,4 +1,4 @@
-from dj_rest_auth.views import LoginView, LogoutView
+from dj_rest_auth.views import LoginView, PasswordChangeView
 from django.urls import path
 from .views import (
     SignUpAPIView,
@@ -7,6 +7,10 @@ from .views import (
     CustomUserDetailsView,
     ResendVerificationCodeView,
 )
+
+PasswordChangeView.__doc__ = """
+Accepts the following POST parameters: old_password, new_password1, new_password2 Returns the success/fail message.
+"""
 
 
 urlpatterns = [
@@ -24,4 +28,9 @@ urlpatterns = [
         name="verification_resend_api_view",
     ),
     path("user/", CustomUserDetailsView.as_view(), name="user_details_api_view"),
+    path(
+        "password/change/",
+        PasswordChangeView.as_view(),
+        name="password_change_api_view",
+    ),
 ]

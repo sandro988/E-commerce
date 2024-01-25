@@ -167,6 +167,7 @@ REST_FRAMEWORK = {
 REST_AUTH = {
     "LOGIN_SERIALIZER": "accounts.serializers.CustomLoginSerializer",
     "USER_DETAILS_SERIALIZER": "accounts.serializers.CustomUserDetailsSerializer",
+    "OLD_PASSWORD_FIELD_ENABLED": True,
 }
 
 SPECTACULAR_SETTINGS = {
