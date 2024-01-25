@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from dj_rest_auth.serializers import (
     LoginSerializer,
     UserDetailsSerializer,
@@ -26,6 +28,15 @@ class SignUpSerializer(serializers.ModelSerializer):
         return user
 
 
+class OTPVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6)
+
+
+class ResendVerificationCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 class CustomLoginSerializer(LoginSerializer):
     """
     Overriding LoginSerializer from dj_rest_auth package so that
@@ -33,6 +44,33 @@ class CustomLoginSerializer(LoginSerializer):
     """
 
     username = None
+
+    def validate_email_verification_status(self, user, email=None):
+        if not user.is_verified:
+            raise ValidationError(
+                _(
+                    "E-mail is not verified. Please check your email for verification code or if you did not receive verification code try to resend it once again."
+                )
+            )
+
+    def validate(self, attrs):
+        username = attrs.get("username")
+        email = attrs.get("email")
+        password = attrs.get("password")
+        user = self.get_auth_user(username, email, password)
+
+        if not user:
+            msg = _("Unable to log in with provided credentials.")
+            raise ValidationError(msg)
+
+        # Did we get back an active user?
+        self.validate_auth_user_status(user)
+
+        # Did we get back a verified user?
+        self.validate_email_verification_status(user, email=email)
+
+        attrs["user"] = user
+        return attrs
 
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):

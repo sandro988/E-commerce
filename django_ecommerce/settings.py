@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "phonenumber_field",
     "drf_spectacular",
+    "corsheaders",
     # Local apps
     "accounts.apps.AccountsConfig",
     # Django cleanup
@@ -53,12 +54,18 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOWED_ORIGINS = (
+    "http://localhost:3000",
+    "http://localhost:8000",
+)
 
 ROOT_URLCONF = "django_ecommerce.urls"
 
@@ -164,8 +171,19 @@ REST_AUTH = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Varmylo - E-commerce project",
-    "DESCRIPTION": """RESTful API for a E-commerce website where registered users 
-    can buy items or sell them.""",
+    "DESCRIPTION": """RESTful API for an E-commerce website where registered users can buy items or sell them.""",
     "VERSION": "1.0.0",
     "COMPONENT_SPLIT_REQUEST": True,
 }
+
+# corsheaders settings
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+# mail settings
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False

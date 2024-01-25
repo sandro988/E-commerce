@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import CustomUser
+from .models import CustomUser, OTP
 
 
-class CustomAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
@@ -12,6 +12,7 @@ class CustomAdmin(UserAdmin):
         "email",
         "is_staff",
         "is_active",
+        "is_verified",
         "is_subscribed_to_newsletter",
         "date_joined",
     ]
@@ -19,6 +20,7 @@ class CustomAdmin(UserAdmin):
         "email",
         "is_staff",
         "is_active",
+        "is_verified",
         "is_subscribed_to_newsletter",
         "date_joined",
     ]
@@ -40,7 +42,15 @@ class CustomAdmin(UserAdmin):
         ],
         [
             "Permissions",
-            {"fields": ["is_staff", "is_active", "groups", "user_permissions"]},
+            {
+                "fields": [
+                    "is_staff",
+                    "is_active",
+                    "is_verified",
+                    "groups",
+                    "user_permissions",
+                ]
+            },
         ],
     ]
     add_fieldsets = [
@@ -72,4 +82,21 @@ class CustomAdmin(UserAdmin):
     ordering = ["email"]
 
 
-admin.site.register(CustomUser, CustomAdmin)
+class OTPAdmin(admin.ModelAdmin):
+    model = OTP
+    list_display = ("user_email", "code", "is_user_verified")
+
+    def user_email(self, obj):
+        return obj.user.email
+
+    def is_user_verified(self, obj):
+        return obj.user.is_verified
+
+    user_email.short_description = "User Email"
+    is_user_verified.short_description = "Verified"
+
+    search_fields = ["email"]
+
+
+admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(OTP, OTPAdmin)

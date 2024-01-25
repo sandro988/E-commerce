@@ -15,6 +15,7 @@ class AccountsManagerTests(TestCase):
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
+        self.assertFalse(user.is_verified)
         # Checking that user object has no username.
         self.assertFalse(hasattr(user, "username"))
         # Checking that the password is hashed
@@ -43,6 +44,7 @@ class AccountsManagerTests(TestCase):
         self.assertTrue(super_user.is_active)
         self.assertTrue(super_user.is_staff)
         self.assertTrue(super_user.is_superuser)
+        self.assertTrue(super_user.is_verified)
         # Checking that user object has no username.
         self.assertFalse(hasattr(super_user, "username"))
         # Checking that the password is hashed
