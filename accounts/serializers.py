@@ -94,4 +94,5 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             "profile_image",
             "preferred_currency",
             "is_subscribed_to_newsletter",
+            "is_verified",
         )

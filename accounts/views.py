@@ -10,12 +10,23 @@ from accounts.serializers import (
     SignUpSerializer,
     OTPVerificationSerializer,
     ResendVerificationCodeSerializer,
+    CustomUserDetailsSerializer,
 )
 from accounts.utils import send_one_time_password_to_user
 from accounts.models import OTP, CustomUser
+from accounts.decorators import user_endpoint_docstring
 
 
 class SignUpAPIView(CreateAPIView):
+    """
+    Endpoint for user registration.
+
+    Accepts POST requests with user data in the request body. Creates a new user with the provided data if valid.
+
+    Sends a one-time code to the user's email for account verification.
+    Returns a success response with a message and status code 201 if successful.
+    """
+
     serializer_class = SignUpSerializer
     permission_classes = [
         AllowAny,
@@ -150,3 +161,37 @@ class CustomLogoutView(LogoutView):
 
 class CustomUserDetailsView(UserDetailsView):
     parser_classes = (JSONParser, MultiPartParser)
+    serializer_class = CustomUserDetailsSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == "PUT" or self.request.method == "PATCH":
+            # Excluding the 'is_verified' field from serializer for PUT and PATCH methods.
+            # Users should be able to see if they are verified or not, but should not be able to modify verification status.
+            class SerializerClass(CustomUserDetailsSerializer):
+                class Meta(CustomUserDetailsSerializer.Meta):
+                    fields = [
+                        field
+                        for field in CustomUserDetailsSerializer.Meta.fields
+                        if field != "is_verified"
+                    ]
+
+            return SerializerClass
+        return self.serializer_class
+
+    @user_endpoint_docstring("API endpoint for User retrieval.")
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @user_endpoint_docstring(
+        "API endpoint for User update.",
+        exclude_fields=["id", "email", "is_verified"],
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @user_endpoint_docstring(
+        "API endpoint for partial user update.",
+        exclude_fields=["id", "email", "is_verified"],
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)

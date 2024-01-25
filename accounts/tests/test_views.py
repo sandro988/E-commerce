@@ -393,6 +393,7 @@ class UserDetailViewTests(APITestCase):
         self.assertEqual(user_data["profile_image"], None)
         self.assertEqual(user_data["preferred_currency"], self.user.preferred_currency)
         self.assertEqual(user_data["is_subscribed_to_newsletter"], False)
+        self.assertEqual(user_data["is_verified"], False)
 
     def test_user_details_on_put_request(self):
         response = self.client.put(

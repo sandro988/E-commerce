@@ -8,8 +8,16 @@ from .views import (
     ResendVerificationCodeView,
 )
 
+LoginView.__doc__ = """
+Checks the credentials and returns the REST Token if the credentials are valid and authenticated. Calls Django Auth login method to register User ID in Django session framework.
+
+Accepts the following POST parameters: `email`, `password`. 
+
+Returns the REST Framework Token Object's key.
+"""
+
 PasswordChangeView.__doc__ = """
-Accepts the following POST parameters: old_password, new_password1, new_password2 Returns the success/fail message.
+Accepts the following POST parameters: `old_password`, `new_password1`, `new_password2` Returns the success/fail message.
 """
 
 
