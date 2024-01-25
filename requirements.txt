@@ -17,6 +17,7 @@ pytz==2023.3.post1
 PyYAML==6.0.1
 referencing==0.32.1
 rpds-py==0.17.1
+soupsieve==2.5
 sqlparse==0.4.4
 typing_extensions==4.9.0
 uritemplate==4.1.1

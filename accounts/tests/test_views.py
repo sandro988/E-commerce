@@ -553,3 +553,236 @@ class PasswordChangeTests(APITestCase):
         user = User.objects.get(pk=self.user.pk)
         self.assertFalse(user.check_password("new_password_123"))
         self.assertTrue(user.check_password("test_pass"))
+
+
+class PasswordResetTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.user = User.objects.create_user(
+            email="test_user@email.com",
+            password="test_pass",
+            full_name="John Doe",
+            phone_number="+1-202-555-0142",
+            birthdate="1998-08-18",
+            address="United States, Florida, Opa-locka, 3990 NW 132nd St",
+            preferred_currency="USD",
+            is_verified=True,
+        )
+
+    def setUp(self) -> None:
+        self.password_reset_url = reverse("password_reset_api_view")
+        self.client = APIClient()
+
+    def send_password_reset_request(self, email):
+        """
+        Helper method to send a password reset request and extract reset URL.
+        Returns (uidb64, token) tuple.
+        """
+
+        password_reset_url = reverse("password_reset_api_view")
+        reset_data = {"email": email}
+        self.client.post(password_reset_url, reset_data, format="json")
+
+        # Getting reset confirm URL
+        email_body = mail.outbox[0].body
+        start_index = email_body.find("Reset URL: ")
+        end_index = email_body.find("\n", start_index)
+        reset_confirm_url = email_body[start_index:end_index].split(": ")[1]
+
+        # Extracting uidb64 and token from reset confirm URL
+        uidb64, token = reset_confirm_url.split("/")[7:9]
+
+        return uidb64, token
+
+    def test_password_reset(self):
+        reset_response = self.client.post(
+            self.password_reset_url,
+            {"email": "test_user@email.com"},
+            format="json",
+        )
+
+        self.assertEqual(reset_response.status_code, status.HTTP_200_OK)
+        self.assertIn("detail", reset_response.data)
+        self.assertEqual(
+            reset_response.data.get("detail"), "Password reset e-mail has been sent."
+        )
+        self.assertEqual(
+            len(mail.outbox), 1
+        )  # Checking that mail has been sent to user.
+
+    def test_password_reset_with_non_existing_email(self):
+        reset_response = self.client.post(
+            self.password_reset_url,
+            {"email": "email_that_does_not_exist@email.com"},
+            format="json",
+        )
+
+        self.assertEqual(reset_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            len(mail.outbox), 0
+        )  # Checking that mail has not been sent to user.
+
+    def test_password_reset_with_invalid_email_format(self):
+        reset_response = self.client.post(
+            self.password_reset_url,
+            {"email": "invalid_email_format"},
+            format="json",
+        )
+
+        self.assertEqual(reset_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("detail", reset_response.data)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_password_reset_confirm_view(self):
+        # All the necessary data
+        uidb64, token = self.send_password_reset_request("test_user@email.com")
+        confirm_url = reverse(
+            "password_reset_confirm", kwargs={"uidb64": uidb64, "token": token}
+        )
+        confirm_data = {
+            "new_password1": "new_password_123",
+            "new_password2": "new_password_123",
+            "uid": uidb64,
+            "token": token,
+        }
+
+        # Request
+        reset_confirm_response = self.client.post(
+            confirm_url, confirm_data, format="json"
+        )
+
+        self.assertEqual(reset_confirm_response.status_code, status.HTTP_200_OK)
+        self.assertIn("detail", reset_confirm_response.data)
+        self.assertEqual(
+            reset_confirm_response.data.get("detail"),
+            "Password has been reset with the new password.",
+        )
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertTrue(updated_user.check_password("new_password_123"))
+
+    def test_password_reset_confirm_view_with_invalid_uidb64(self):
+        # All the necessary data
+        uidb64, token = self.send_password_reset_request("test_user@email.com")
+        uidb64 = "invalid uidb64"
+        confirm_url = reverse(
+            "password_reset_confirm", kwargs={"uidb64": uidb64, "token": token}
+        )
+        confirm_data = {
+            "new_password1": "new_password_123",
+            "new_password2": "new_password_123",
+            "uid": uidb64,
+            "token": token,
+        }
+
+        # Request
+        reset_confirm_response = self.client.post(
+            confirm_url, confirm_data, format="json"
+        )
+
+        self.assertEqual(
+            reset_confirm_response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(updated_user.check_password("new_password_123"))
+
+    def test_password_reset_confirm_view_with_invalid_token(self):
+        # All the necessary data
+        uidb64, token = self.send_password_reset_request("test_user@email.com")
+        token = "invalid token"
+        confirm_url = reverse(
+            "password_reset_confirm", kwargs={"uidb64": uidb64, "token": token}
+        )
+        confirm_data = {
+            "new_password1": "new_password_123",
+            "new_password2": "new_password_123",
+            "uid": uidb64,
+            "token": token,
+        }
+
+        # Request
+        reset_confirm_response = self.client.post(
+            confirm_url, confirm_data, format="json"
+        )
+
+        self.assertEqual(
+            reset_confirm_response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(updated_user.check_password("new_password_123"))
+
+    def test_password_reset_confirm_view_with_non_matching_passwords(self):
+        # All the necessary data
+        uidb64, token = self.send_password_reset_request("test_user@email.com")
+        confirm_url = reverse(
+            "password_reset_confirm", kwargs={"uidb64": uidb64, "token": token}
+        )
+        confirm_data = {
+            "new_password1": "new_password_123",
+            "new_password2": "new_password_123456789",
+            "uid": uidb64,
+            "token": token,
+        }
+
+        # Request
+        reset_confirm_response = self.client.post(
+            confirm_url, confirm_data, format="json"
+        )
+
+        self.assertEqual(
+            reset_confirm_response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(updated_user.check_password("new_password_123"))
+        self.assertFalse(updated_user.check_password("new_password_123456789"))
+        self.assertTrue(
+            updated_user.check_password("test_pass")
+        )  # Password of the user that I created in setUpTestData
+
+    def test_password_reset_confirm_view_with_invalid_password(self):
+        # All the necessary data
+        uidb64, token = self.send_password_reset_request("test_user@email.com")
+        confirm_url = reverse(
+            "password_reset_confirm", kwargs={"uidb64": uidb64, "token": token}
+        )
+        confirm_data = {
+            "new_password1": "AB3",  # This password should not be valid because it is too short
+            "new_password2": "AB3",
+            "uid": uidb64,
+            "token": token,
+        }
+
+        # Request
+        reset_confirm_response = self.client.post(
+            confirm_url, confirm_data, format="json"
+        )
+
+        self.assertEqual(
+            reset_confirm_response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(updated_user.check_password("AB3"))
+        self.assertTrue(updated_user.check_password("test_pass"))
+
+    def test_password_reset_confirm_view_with_empty_password(self):
+        # All the necessary data
+        uidb64, token = self.send_password_reset_request("test_user@email.com")
+        confirm_url = reverse(
+            "password_reset_confirm", kwargs={"uidb64": uidb64, "token": token}
+        )
+        confirm_data = {
+            "new_password1": "",
+            "new_password2": "",
+            "uid": uidb64,
+            "token": token,
+        }
+
+        # Request
+        reset_confirm_response = self.client.post(
+            confirm_url, confirm_data, format="json"
+        )
+
+        self.assertEqual(
+            reset_confirm_response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        updated_user = User.objects.get(pk=self.user.pk)
+        self.assertFalse(updated_user.check_password(""))

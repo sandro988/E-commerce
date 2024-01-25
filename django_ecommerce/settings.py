@@ -72,7 +72,7 @@ ROOT_URLCONF = "django_ecommerce.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -167,11 +167,12 @@ REST_FRAMEWORK = {
 REST_AUTH = {
     "LOGIN_SERIALIZER": "accounts.serializers.CustomLoginSerializer",
     "USER_DETAILS_SERIALIZER": "accounts.serializers.CustomUserDetailsSerializer",
+    "PASSWORD_RESET_SERIALIZER": "accounts.serializers.CustomPasswordResetSerializer",
     "OLD_PASSWORD_FIELD_ENABLED": True,
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Varmylo - E-commerce project",
+    "TITLE": "E-commerce Project",
     "DESCRIPTION": """RESTful API for an E-commerce website where registered users can buy items or sell them.""",
     "VERSION": "1.0.0",
     "COMPONENT_SPLIT_REQUEST": True,

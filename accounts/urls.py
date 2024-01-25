@@ -1,5 +1,10 @@
-from dj_rest_auth.views import LoginView, PasswordChangeView
 from django.urls import path
+from dj_rest_auth.views import (
+    LoginView,
+    PasswordChangeView,
+    PasswordResetView,
+    PasswordResetConfirmView,
+)
 from .views import (
     SignUpAPIView,
     OTPVerificationView,
@@ -40,5 +45,15 @@ urlpatterns = [
         "password/change/",
         PasswordChangeView.as_view(),
         name="password_change_api_view",
+    ),
+    path(
+        "password/reset/",
+        PasswordResetView.as_view(),
+        name="password_reset_api_view",
+    ),
+    path(
+        "password/reset/confirm/<str:uidb64>/<str:token>/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
     ),
 ]

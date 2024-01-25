@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from dj_rest_auth.serializers import (
     LoginSerializer,
     UserDetailsSerializer,
+    PasswordResetSerializer,
 )
 
 
@@ -96,3 +97,28 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             "is_subscribed_to_newsletter",
             "is_verified",
         )
+
+
+class CustomPasswordResetSerializer(PasswordResetSerializer):
+    def validate_email(self, value):
+        value = super().validate_email(value)
+
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "Invalid email. No user with this email exists."
+            )
+
+        return value
+
+    def save(self):
+        request = self.context.get("request")
+
+        opts = {
+            "use_https": request.is_secure(),
+            "from_email": "example@mydomain.com",
+            "request": request,
+            "email_template_name": "password_reset_email.html",
+        }
+
+        opts.update(self.get_email_options())
+        self.reset_form.save(**opts)
