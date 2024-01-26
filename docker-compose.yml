@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   django:
+    container_name: e-commerce-django
     build:  .
     command: python3 manage.py runserver 0.0.0.0:8000
     ports:
@@ -12,15 +13,33 @@ services:
       - ./.env.dev
     depends_on:
       - postgres
+      - redis
   
   postgres:
     image: postgres:15
+    container_name: e-commerce-postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=django_ecommerce
       - POSTGRES_PASSWORD=django_ecommerce
       - POSTGRES_DB=django_ecommerce_dev
+  
+  redis:
+    image: "redis:alpine"
+    container_name: e-commerce-redis
+
+  celery:
+    container_name: e-commerce-celery
+    build: .
+    command: celery -A django_ecommerce worker -l INFO
+    volumes:
+      - .:/E-commerce
+    env_file:
+      - ./.env.dev
+    depends_on:   
+      - django
+      - redis
 
 volumes:
   postgres_data:
