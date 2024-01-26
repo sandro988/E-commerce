@@ -1,4 +1,5 @@
 from django.utils.translation import gettext as _
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
@@ -82,6 +83,14 @@ class OTPVerificationView(APIView):
                 )
 
             otp = OTP.objects.get(user__email=email, code=otp_code)
+            if otp.expiry_timestamp < timezone.now():
+                otp.delete()
+                return Response(
+                    {
+                        "message": "OTP code has expired. Please request a new verification code."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except CustomUser.DoesNotExist:
             return Response(
                 {"message": "User not found."}, status=status.HTTP_400_BAD_REQUEST

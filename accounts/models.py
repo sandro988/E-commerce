@@ -1,6 +1,8 @@
 import uuid
+from datetime import timedelta
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils import timezone
 from django.db import models
 from .managers import CustomUserManager
 
@@ -49,9 +51,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class OTP(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     code = models.CharField(max_length=6, unique=True)
+    expiry_timestamp = models.DateTimeField(
+        default=timezone.now() + timezone.timedelta(days=1)
+    )
 
     def __str__(self):
         return self.code
+
+    def is_expired(self):
+        return timezone.now() > self.expiry_timestamp
 
     class Meta:
         verbose_name = "OTP"

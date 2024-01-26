@@ -1,6 +1,7 @@
+from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.conf import settings
+from django.utils import timezone
 from django.core import mail
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
@@ -222,6 +223,37 @@ class SignUpTests(APITestCase):
             response.data,
             {"message": "User not found."},
         )
+
+    def test_verification_code_expired(self):
+        self.client.post(
+            self.signup_url,
+            self.correct_user_data,
+            format="json",
+        )
+
+        verification_code = OTP.objects.last()
+        verification_code.expiry_timestamp = timezone.now() - timedelta(seconds=5)
+        verification_code.save()
+
+        verification_data = {
+            "email": mail.outbox[0].to[0],
+            "otp_code": mail.outbox[0].body,
+        }
+        verification_response = self.client.post(
+            self.verification_url,
+            verification_data,
+            format="json",
+        )
+
+        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            verification_response.data,
+            {
+                "message": "OTP code has expired. Please request a new verification code."
+            },
+        )
+        self.assertFalse(User.objects.last().is_verified)
+        self.assertIsNone(OTP.objects.last())
 
 
 class AuthenticationTests(APITestCase):

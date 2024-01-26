@@ -84,7 +84,7 @@ class CustomUserAdmin(UserAdmin):
 
 class OTPAdmin(admin.ModelAdmin):
     model = OTP
-    list_display = ("user_email", "code", "is_user_verified")
+    list_display = ("user_email", "code", "expiry_timestamp", "is_user_verified")
 
     def user_email(self, obj):
         return obj.user.email
