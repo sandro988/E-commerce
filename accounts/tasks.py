@@ -48,3 +48,20 @@ def send_password_reset_email_task(
         email_message.attach_alternative(html_email, "text/html")
 
     email_message.send()
+
+
+@shared_task
+def send_already_verified_email(user_email):
+    subject = "Account Verification Reminder"
+    context = {
+        "user_email": user_email,
+    }
+    email_body = render_to_string("already_verified_email_template.html", context)
+
+    email = EmailMessage(
+        subject=subject,
+        body=email_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user_email],
+    )
+    email.send()

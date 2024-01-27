@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}{% trans "Hello from E-commerce API!" %}
+
+{% trans "You're receiving this e-mail because you or someone else has attempted to re-verify your user account at E-commerce API." %}
+{% trans "This email can be safely ignored if you did not request a re-verification." %}
+
+{% trans "But if you requested account re-verification, please note that your account is already verified." %}
+
+{% trans "Your Email, in case you've forgotten:" %} {{ user_email }}
+{% trans "Thanks for using our site!" %}
+
+{% endautoescape %}

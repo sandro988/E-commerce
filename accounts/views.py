@@ -12,7 +12,7 @@ from accounts.serializers import (
     ResendVerificationCodeSerializer,
     CustomUserDetailsSerializer,
 )
-from accounts.tasks import send_one_time_password_to_user
+from accounts.tasks import send_one_time_password_to_user, send_already_verified_email
 from accounts.models import OTP, CustomUser
 from accounts.decorators import user_endpoint_docstring
 
@@ -89,7 +89,6 @@ class OTPVerificationView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-
         otp.user.is_verified = True
         otp.user.save()
         otp.delete()
@@ -117,9 +116,10 @@ class ResendVerificationCodeView(APIView):
         try:
             user = CustomUser.objects.get(email=email)
             if user.is_verified:
+                send_already_verified_email.delay(email)
                 return Response(
-                    {"message": "User is already verified."},
-                    status=status.HTTP_409_CONFLICT,
+                    {"message": "Verification code resent successfully."},
+                    status=status.HTTP_200_OK,
                 )
 
             # Celery task for resending verification email to user.
@@ -133,6 +133,11 @@ class ResendVerificationCodeView(APIView):
         except CustomUser.DoesNotExist:
             return Response(
                 {"message": "User not found."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"message": "Internal server error."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
