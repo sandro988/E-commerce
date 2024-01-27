@@ -106,12 +106,10 @@ class SignUpTests(APITestCase):
             verification_data,
             format="json",
         )  # Trying to verify an already verified user.
-        self.assertEqual(verification_response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             verification_response.data,
-            {
-                "message": "User is already verified, you can not reverify an already verified user."
-            },
+            {"message": "User or OTP code is not correct. Please try again later."},
         )
 
     def test_user_verification_with_incorrect_data(self):
@@ -130,8 +128,11 @@ class SignUpTests(APITestCase):
             },
             format="json",
         )
-        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(verification_response.data, {"message": "User not found."})
+        self.assertEqual(verification_response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            verification_response.data,
+            {"message": "User or OTP code is not correct. Please try again later."},
+        )
         self.assertEqual(
             OTP.objects.count(), 1
         )  # OTP should not be deleted when verification fails.
@@ -144,8 +145,11 @@ class SignUpTests(APITestCase):
             },
             format="json",
         )
-        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(verification_response.data, {"message": "Invalid OTP code."})
+        self.assertEqual(verification_response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            verification_response.data,
+            {"message": "User or OTP code is not correct. Please try again later."},
+        )
         self.assertEqual(OTP.objects.count(), 1)
 
     def test_resend_verification(self):
@@ -249,7 +253,7 @@ class SignUpTests(APITestCase):
             format="json",
         )
 
-        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(verification_response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertFalse(User.objects.last().is_verified)
         self.assertIsNone(OTP.objects.last())
 

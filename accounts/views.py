@@ -77,20 +77,18 @@ class OTPVerificationView(APIView):
             if user.is_verified:
                 return Response(
                     {
-                        "message": "User is already verified, you can not reverify an already verified user."
+                        "message": "User or OTP code is not correct. Please try again later."
                     },
-                    status=status.HTTP_409_CONFLICT,
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             otp = OTP.objects.get(user__email=email, code=otp_code)
-        except CustomUser.DoesNotExist:
+        except (CustomUser.DoesNotExist, OTP.DoesNotExist):
             return Response(
-                {"message": "User not found."}, status=status.HTTP_400_BAD_REQUEST
+                {"message": "User or OTP code is not correct. Please try again later."},
+                status=status.HTTP_404_NOT_FOUND,
             )
-        except OTP.DoesNotExist:
-            return Response(
-                {"message": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST
-            )
+
 
         otp.user.is_verified = True
         otp.user.save()
@@ -115,11 +113,6 @@ class ResendVerificationCodeView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
-
-        if not email:
-            return Response(
-                {"message": "Email is required."}, status=status.HTTP_400_BAD_REQUEST
-            )
 
         try:
             user = CustomUser.objects.get(email=email)
