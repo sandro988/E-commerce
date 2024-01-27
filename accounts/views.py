@@ -13,7 +13,7 @@ from accounts.serializers import (
     ResendVerificationCodeSerializer,
     CustomUserDetailsSerializer,
 )
-from accounts.utils import send_one_time_password_to_user
+from accounts.tasks import send_one_time_password_to_user
 from accounts.models import OTP, CustomUser
 from accounts.decorators import user_endpoint_docstring
 
@@ -38,7 +38,8 @@ class SignUpAPIView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        send_one_time_password_to_user(user)
+        # Celery task for resending verification email to user.
+        send_one_time_password_to_user.delay(user.id)
 
         return Response(
             {
@@ -137,7 +138,8 @@ class ResendVerificationCodeView(APIView):
                     status=status.HTTP_409_CONFLICT,
                 )
 
-            send_one_time_password_to_user(user)
+            # Celery task for resending verification email to user.
+            send_one_time_password_to_user.delay(user.id)
 
             return Response(
                 {"message": "Verification code resent successfully."},

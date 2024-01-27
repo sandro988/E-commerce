@@ -3,15 +3,16 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from django.core import mail
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from accounts.models import OTP
 
-
 User = get_user_model()
 
 
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class SignUpTests(APITestCase):
     def setUp(self):
         self.signup_url = reverse("signup_api_view")
