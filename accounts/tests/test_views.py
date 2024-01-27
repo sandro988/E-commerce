@@ -640,18 +640,6 @@ class PasswordResetTests(APITestCase):
             len(mail.outbox), 1
         )  # Checking that mail has been sent to user.
 
-    def test_password_reset_with_non_existing_email(self):
-        reset_response = self.client.post(
-            self.password_reset_url,
-            {"email": "email_that_does_not_exist@email.com"},
-            format="json",
-        )
-
-        self.assertEqual(reset_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            len(mail.outbox), 0
-        )  # Checking that mail has not been sent to user.
-
     def test_password_reset_with_invalid_email_format(self):
         reset_response = self.client.post(
             self.password_reset_url,

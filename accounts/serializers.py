@@ -100,16 +100,6 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
 
 class CustomPasswordResetSerializer(PasswordResetSerializer):
-    def validate_email(self, value):
-        value = super().validate_email(value)
-
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "Invalid email. No user with this email exists."
-            )
-
-        return value
-
     def save(self):
         request = self.context.get("request")
 
