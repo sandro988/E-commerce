@@ -7,6 +7,10 @@ from django.db import models
 from .managers import CustomUserManager
 
 
+def expiration():
+    return timezone.now() + timedelta(days=1)
+
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     def user_profile_image_filename(self, filename):
         return f"profile_images/{self.id}-{filename}"
@@ -52,7 +56,7 @@ class OTP(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     code = models.CharField(max_length=6, unique=True)
     expiry_timestamp = models.DateTimeField(
-        default=timezone.now() + timezone.timedelta(days=1)
+        default=expiration, verbose_name="Expire on"
     )
 
     def __str__(self):

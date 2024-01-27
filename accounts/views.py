@@ -84,14 +84,6 @@ class OTPVerificationView(APIView):
                 )
 
             otp = OTP.objects.get(user__email=email, code=otp_code)
-            if otp.expiry_timestamp < timezone.now():
-                otp.delete()
-                return Response(
-                    {
-                        "message": "OTP code has expired. Please request a new verification code."
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
         except CustomUser.DoesNotExist:
             return Response(
                 {"message": "User not found."}, status=status.HTTP_400_BAD_REQUEST

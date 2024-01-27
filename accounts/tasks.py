@@ -1,8 +1,9 @@
 from celery import shared_task
+from django.utils import timezone
 from django.core.mail import EmailMessage
 from django.conf import settings
 from .utils import generate_or_update_otp
-from .models import CustomUser
+from .models import CustomUser, OTP
 
 
 @shared_task
@@ -17,3 +18,9 @@ def send_one_time_password_to_user(user_id):
         subject=subject, body=email_body, from_email=from_email, to=[user.email]
     )
     email.send()
+
+
+@shared_task
+def delete_expired_otps():
+    expired_otps = OTP.objects.filter(expiry_timestamp__lte=timezone.now())
+    expired_otps.delete()

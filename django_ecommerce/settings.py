@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "drf_spectacular",
     "corsheaders",
+    "django_celery_beat",
     # Local apps
     "accounts.apps.AccountsConfig",
     # Django cleanup
@@ -196,3 +198,12 @@ EMAIL_USE_SSL = False
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
+CELERY_BEAT_SCHEDULE = {
+    "delete-expired-otps": {
+        "task": "accounts.tasks.delete_expired_otps",
+        "schedule": timedelta(hours=1),
+    },
+}

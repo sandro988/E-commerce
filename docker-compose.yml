@@ -44,6 +44,20 @@ services:
       - postgres
       - redis
   
+  celery-beat:
+    container_name: e-commerce-celery-beat
+    build: .
+    command: celery -A django_ecommerce beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    restart: always
+    volumes:
+      - .:/E-commerce
+    env_file:
+      - ./.env.dev
+      - ./.env.dev.postgres
+    depends_on:   
+      - postgres
+      - redis
+  
   flower:
     container_name: e-commerce-flower
     build: .

@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from accounts.models import OTP
+from accounts.tasks import delete_expired_otps
 
 User = get_user_model()
 
@@ -233,13 +234,15 @@ class SignUpTests(APITestCase):
         )
 
         verification_code = OTP.objects.last()
-        verification_code.expiry_timestamp = timezone.now() - timedelta(seconds=5)
+        verification_code.expiry_timestamp = timezone.now() - timedelta(days=1)
         verification_code.save()
+        delete_expired_otps()  # Calling periodic task for deleting expired OTP's.
 
         verification_data = {
             "email": mail.outbox[0].to[0],
             "otp_code": mail.outbox[0].body,
         }
+
         verification_response = self.client.post(
             self.verification_url,
             verification_data,
@@ -247,12 +250,6 @@ class SignUpTests(APITestCase):
         )
 
         self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            verification_response.data,
-            {
-                "message": "OTP code has expired. Please request a new verification code."
-            },
-        )
         self.assertFalse(User.objects.last().is_verified)
         self.assertIsNone(OTP.objects.last())
 
