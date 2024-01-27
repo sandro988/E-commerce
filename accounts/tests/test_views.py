@@ -585,6 +585,7 @@ class PasswordChangeTests(APITestCase):
         self.assertTrue(user.check_password("test_pass"))
 
 
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class PasswordResetTests(APITestCase):
     @classmethod
     def setUpTestData(cls) -> None:
@@ -639,6 +640,19 @@ class PasswordResetTests(APITestCase):
         self.assertEqual(
             len(mail.outbox), 1
         )  # Checking that mail has been sent to user.
+
+    def test_password_reset_with_non_existing_email(self):
+        reset_response = self.client.post(
+            self.password_reset_url,
+            {"email": "email_that_does_not_exist@email.com"},
+            format="json",
+        )
+
+        # User should still get the 200 response code so that they do not know if they found existing email or not.
+        self.assertEqual(reset_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(mail.outbox), 0
+        )  # Checking that mail has not been sent to user.
 
     def test_password_reset_with_invalid_email_format(self):
         reset_response = self.client.post(

@@ -8,6 +8,7 @@ from dj_rest_auth.serializers import (
     UserDetailsSerializer,
     PasswordResetSerializer,
 )
+from .forms import CustomPasswordResetForm
 
 
 User = get_user_model()
@@ -100,6 +101,10 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
 
 class CustomPasswordResetSerializer(PasswordResetSerializer):
+    @property
+    def password_reset_form_class(self):
+        return CustomPasswordResetForm
+
     def save(self):
         request = self.context.get("request")
 
@@ -110,5 +115,4 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
             "email_template_name": "password_reset_email.html",
         }
 
-        opts.update(self.get_email_options())
         self.reset_form.save(**opts)
