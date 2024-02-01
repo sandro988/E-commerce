@@ -29,6 +29,18 @@ class SignUpTests(APITestCase):
             "password": "",
         }
 
+    def get_otp_from_mail(self, mail):
+        # Email body is constructed as: "Your one time password: {otp_code}".
+        # So with split().pop() I am getting the last element from the list which is the code itself.
+        return mail.body.split().pop()
+
+    def get_verification_data(self, mail):
+        verification_data = {
+            "email": mail.to[0],
+            "otp_code": self.get_otp_from_mail(mail),
+        }
+        return verification_data
+
     def test_register_user(self):
         response = self.client.post(
             self.signup_url,
@@ -77,18 +89,13 @@ class SignUpTests(APITestCase):
         )
         self.assertEqual(signup_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
-        otp_from_email = mail.outbox[0].body
+        otp_from_email = self.get_otp_from_mail(mail.outbox[0])
         self.assertEqual(OTP.objects.count(), 1)
         self.assertEqual(OTP.objects.first().code, otp_from_email)
 
-        verification_data = {
-            "email": mail.outbox[0].to[0],
-            "otp_code": mail.outbox[0].body,
-        }
-
         verification_response = self.client.post(
             self.verification_url,
-            verification_data,
+            self.get_verification_data(mail.outbox[0]),
             format="json",
         )
         self.assertEqual(verification_response.status_code, status.HTTP_200_OK)
@@ -103,7 +110,7 @@ class SignUpTests(APITestCase):
 
         verification_response = self.client.post(
             self.verification_url,
-            verification_data,
+            self.get_verification_data(mail.outbox[0]),
             format="json",
         )  # Trying to verify an already verified user.
         self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -179,10 +186,7 @@ class SignUpTests(APITestCase):
 
         verification_response = self.client.post(
             self.verification_url,
-            {
-                "email": mail.outbox[0].to[0],
-                "otp_code": mail.outbox[1].body,
-            },
+            self.get_verification_data(mail.outbox[1]),
             format="json",
         )
 
@@ -246,7 +250,7 @@ class SignUpTests(APITestCase):
 
         verification_data = {
             "email": mail.outbox[0].to[0],
-            "otp_code": mail.outbox[0].body,
+            "otp_code": self.get_otp_from_mail(mail.outbox[0]),
         }
 
         verification_response = self.client.post(

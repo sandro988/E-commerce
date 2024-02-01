@@ -3,6 +3,7 @@ asgiref==3.7.2
 async-timeout==4.0.3
 attrs==23.2.0
 billiard==4.2.0
+black==24.1.1
 celery==5.3.6
 click==8.1.7
 click-didyoumean==0.3.0
@@ -24,8 +25,12 @@ inflection==0.5.1
 jsonschema==4.21.1
 jsonschema-specifications==2023.12.1
 kombu==5.3.5
+mypy-extensions==1.0.0
+packaging==23.2
+pathspec==0.12.1
 phonenumberslite==8.13.25
 pillow==10.2.0
+platformdirs==4.2.0
 prometheus-client==0.19.0
 prompt-toolkit==3.0.43
 psycopg2-binary==2.9.6
@@ -39,6 +44,7 @@ rpds-py==0.17.1
 six==1.16.0
 soupsieve==2.5
 sqlparse==0.4.4
+tomli==2.0.1
 tornado==6.4
 typing_extensions==4.9.0
 tzdata==2023.4

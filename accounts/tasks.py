@@ -12,7 +12,7 @@ def send_one_time_password_to_user(user_id):
     user = CustomUser.objects.get(pk=user_id)
     otp_code = generate_or_update_otp(user)
     subject = "One time code for account verification."
-    email_body = otp_code
+    email_body = f"Your one time password: {otp_code}"
     from_email = settings.DEFAULT_FROM_EMAIL
 
     email = EmailMessage(
