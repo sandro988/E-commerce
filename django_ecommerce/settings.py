@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     # Local apps
     "accounts.apps.AccountsConfig",
+    "inventory.apps.InventoryConfig",
     # Django cleanup
     "django_cleanup.apps.CleanupConfig",
 ]
