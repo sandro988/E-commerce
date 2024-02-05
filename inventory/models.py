@@ -17,7 +17,7 @@ class Category(models.Model):
     def category_image_filename(self, filename):
         return f"category_images/{filename}"
 
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, unique=True)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to=category_image_filename, blank=True, null=True)

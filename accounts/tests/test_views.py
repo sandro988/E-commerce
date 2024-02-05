@@ -474,7 +474,7 @@ class UserDetailViewTests(APITestCase):
         self.assertEqual(user_data["is_subscribed_to_newsletter"], True)
 
     def test_user_details_with_unauthenticated_user(self):
-        # Unsetind the credentials for a client by calling the credentials() method without passing any arguments.
+        # Removing the credentials for a client by calling the credentials() method without passing any arguments.
         self.client.credentials()
 
         response = self.client.put(

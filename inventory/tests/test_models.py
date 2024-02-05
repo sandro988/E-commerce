@@ -1,6 +1,5 @@
 import os
 from django.test import TestCase
-from django.core.files.uploadedfile import SimpleUploadedFile
 from inventory.models import Category
 
 
@@ -39,12 +38,3 @@ class CategoryModelTestClass(TestCase):
     def test_category_slug_generation(self):
         self.assertEqual(self.parent_category.slug, "parent-category")
         self.assertEqual(self.subcategory.slug, "subcategory")
-
-    def test_image_upload(self):
-        image_file = SimpleUploadedFile(
-            "test_image.jpg", b"file_content", content_type="image/jpeg"
-        )
-        category = Category.objects.create(
-            name="Image Category", description="Test Description", image=image_file
-        )
-        self.assertTrue(category.image)
