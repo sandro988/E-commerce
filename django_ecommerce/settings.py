@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "corsheaders",
     "django_celery_beat",
+    "debug_toolbar",
     # Local apps
     "accounts.apps.AccountsConfig",
     "inventory.apps.InventoryConfig",
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -208,3 +210,11 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": timedelta(hours=1),
     },
 }
+
+
+# For debug toolbar
+
+if DEBUG:
+    import socket  # only if you haven't already imported this
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
