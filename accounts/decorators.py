@@ -3,7 +3,7 @@ from functools import wraps
 
 def user_endpoint_docstring(first_line, exclude_fields=None):
     """
-    Decorator to generate docstrings for user endpoint methods.
+    Decorator to generate docstring for user endpoint methods.
     This decorator will help to exclude certain fields such as id, email, is_verified from PUT and PATCH endpoints.
 
     Args:

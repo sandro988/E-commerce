@@ -147,6 +147,7 @@ class CustomLogoutView(LogoutView):
     If the user is not authenticated, it returns a response indicating that they are already
     logged out. Otherwise, it proceeds with the original logout logic.
     """
+    serializer_class = None
 
     def logout(self, request):
         if not request.user.is_authenticated:
@@ -163,21 +164,6 @@ class CustomUserDetailsView(UserDetailsView):
     parser_classes = (JSONParser, MultiPartParser)
     serializer_class = CustomUserDetailsSerializer
 
-    def get_serializer_class(self):
-        if self.request.method == "PUT" or self.request.method == "PATCH":
-            # Excluding the 'is_verified' field from serializer for PUT and PATCH methods.
-            # Users should be able to see if they are verified or not, but should not be able to modify verification status.
-            class SerializerClass(CustomUserDetailsSerializer):
-                class Meta(CustomUserDetailsSerializer.Meta):
-                    fields = [
-                        field
-                        for field in CustomUserDetailsSerializer.Meta.fields
-                        if field != "is_verified"
-                    ]
-
-            return SerializerClass
-        return self.serializer_class
-
     @user_endpoint_docstring("API endpoint for User retrieval.")
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -187,6 +173,11 @@ class CustomUserDetailsView(UserDetailsView):
         exclude_fields=["id", "email", "is_verified"],
     )
     def put(self, request, *args, **kwargs):
+        if "is_verified" in request.data:
+            return Response(
+                {"error": "This field is read-only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return super().put(request, *args, **kwargs)
 
     @user_endpoint_docstring(
@@ -194,4 +185,9 @@ class CustomUserDetailsView(UserDetailsView):
         exclude_fields=["id", "email", "is_verified"],
     )
     def patch(self, request, *args, **kwargs):
+        if "is_verified" in request.data:
+            return Response(
+                {"error": "This field is read-only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return super().patch(request, *args, **kwargs)

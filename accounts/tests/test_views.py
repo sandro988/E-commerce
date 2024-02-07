@@ -396,6 +396,7 @@ class UserDetailViewTests(APITestCase):
         cls.token = Token.objects.create(user=cls.user)
 
         cls.put_request_data = {
+            "email": "test_user@email.com",
             "full_name": "Maia Koelpin IV",
             "phone_number": "+1-202-555-0110",
             "birthdate": "1977-08-28",
@@ -498,6 +499,27 @@ class UserDetailViewTests(APITestCase):
         self.assertNotEqual(
             User.objects.last().full_name, self.put_request_data["full_name"]
         )
+
+    def test_update_read_only_fields(self):
+        self.put_request_data["is_verified"] = True
+        self.patch_request_data["is_verified"] = True
+
+        response = self.client.put(
+            self.url,
+            self.put_request_data,
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIsNotNone(response.data.get("error"))
+
+        response = self.client.patch(
+            self.url,
+            self.patch_request_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIsNotNone(response.data.get("error"))
 
 
 class PasswordChangeTests(APITestCase):
