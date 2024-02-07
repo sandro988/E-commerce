@@ -74,6 +74,64 @@ class CategoryListTests(APITestCase):
         self.assertEqual(len(response.data), 10)
 
 
+class SubCategoryListTests(BaseCategoryTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        for i in range(1, 11):
+            Category.objects.create(
+                name=f"Subcategory {i}",
+                description=f"Description for Subcategory {i}",
+                parent=cls.category,
+            )
+
+    def setUp(self):
+        self.subcategories_list_url = reverse(
+            "category-subcategories-list", kwargs={"slug": self.category.slug}
+        )
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
+
+    def test_list_subcategories(self):
+        response = self.client.get(self.subcategories_list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 10)
+
+    def test_list_subcategories_with_unauthenticated_user(self):
+        self.client.credentials()
+        response = self.client.get(self.subcategories_list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 10)
+
+    def test_list_subcategories_without_permissions(self):
+        self.user.is_staff = False
+        self.user.save()
+
+        response = self.client.get(self.subcategories_list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 10)
+
+    def test_no_subcategories(self):
+        Category.objects.create(name="Category with no subcategories")
+        new_category = Category.objects.get(name="Category with no subcategories")
+        url = reverse("category-subcategories-list", kwargs={"slug": new_category.slug})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+    def test_category_not_found(self):
+        url = reverse(
+            "category-subcategories-list", kwargs={"slug": "non-existent-slug"}
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
 class CategoryRetrieveTests(BaseCategoryTestCase):
     def setUp(self):
         self.category_retrieve_url = reverse(
@@ -90,38 +148,6 @@ class CategoryRetrieveTests(BaseCategoryTestCase):
         self.assertEqual(response.data["slug"], "test-category")
         self.assertEqual(response.data["description"], "Description for Test Category")
         self.assertEqual(response.data["parent"], None)
-        # When we do not explicitly set the `with_subcategories` query parameter
-        # in a request there should be no subcategories in response.
-        self.assertNotIn("subcategories", response.data)
-
-    def test_retrieve_category_with_subcategories(self):
-        # Creating subcategory
-        Category.objects.create(
-            name="Subcategory",
-            description="Description for Subcategory",
-            parent=self.category,
-        )
-        # Setting `with_subcategories` to `true` should return subcategories.
-        url_with_children = f"{self.category_retrieve_url}?with_subcategories=true"
-        response = self.client.get(url_with_children)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("subcategories", response.data)
-        self.assertEqual(len(response.data["subcategories"]), 1)
-
-    def test_retrieve_category_without_subcategories(self):
-        # Creating subcategory
-        Category.objects.create(
-            name="Subcategory",
-            description="Description for Subcategory",
-            parent=self.category,
-        )
-        # Setting `with_subcategories` to `false` should not return subcategories.
-        url_with_children = f"{self.category_retrieve_url}?with_subcategories=false"
-        response = self.client.get(url_with_children)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotIn("subcategories", response.data)
 
     def test_list_categories_with_unauthenticated_user(self):
         self.client.credentials()

@@ -1,18 +1,19 @@
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
-from drf_spectacular.openapi import OpenApiParameter
 from .openapi.examples import (
     list_category_examples,
+    list_subcategories_examples,
     retrieve_category_examples,
     create_category_examples,
     update_category_examples,
     partial_update_category_examples,
     delete_category_examples,
 )
-from .serializers import CategorySerializer, CategoryWithSubcategoriesSerializer
+from .serializers import CategorySerializer, SubCategorySerializer
 from .models import Category
 
 
@@ -25,30 +26,28 @@ class CategoryViewSet(ModelViewSet):
         """
         Determine the serializer class to use for this view.
 
-        Returns the serializer class based on the action being performed and the query parameter 'with_subcategories'.
+        Returns the serializer class based on the action being performed.
 
-        If the action is 'retrieve' and the query parameter 'with_subcategories' is set to 'true',
-        returns the 'CategoryWithSubcategoriesSerializer'. Otherwise, returns the 'CategorySerializer'.
+        If the action is 'list_subcategories', returns the 'SubCategorySerializer'. Otherwise, returns the 'CategorySerializer'.
 
-        The difference between 'CategoryWithSubcategoriesSerializer' and 'CategorySerializer' is that the former will
+        The difference between 'SubCategorySerializer' and 'CategorySerializer' is that the former will
         return subcategories of category in response.
 
         Returns:
             Class: The serializer class to be used for the view.
         """
-        if (
-            self.action == "retrieve"
-            and self.request.query_params.get("with_subcategories") == "true"
-        ):
-            return CategoryWithSubcategoriesSerializer
-        else:
-            return CategorySerializer
+
+        return (
+            SubCategorySerializer
+            if self.action == "list_subcategories"
+            else CategorySerializer
+        )
 
     def get_permissions(self):
         """
         Returns the list of permissions for the view.
 
-        For the 'list' and 'retrieve' actions, permissions are set to allow any user
+        For the 'list', 'list_subcategories' and 'retrieve' actions, permissions are set to allow any user
         to access the endpoint without authentication or specific permissions. For
         other actions, such as 'create', 'update', 'delete', only the users with is_staff
         set to True are allowed access.
@@ -56,7 +55,7 @@ class CategoryViewSet(ModelViewSet):
         Returns:
         - List of permission classes based on the action being performed.
         """
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["list", "retrieve", "list_subcategories"]:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAdminUser]
@@ -87,15 +86,38 @@ class CategoryViewSet(ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="with_subcategories",
-                location=OpenApiParameter.QUERY,
-                description="Will include subcategories of the retrieved category in the response.",
-                required=False,
-                type=bool,
-            ),
-        ],
+        responses={
+            200: SubCategorySerializer,
+            401: SubCategorySerializer,
+            404: SubCategorySerializer,
+        },
+        examples=list_subcategories_examples(),
+    )
+    @action(detail=True, methods=["GET"], url_name="subcategories-list")
+    def list_subcategories(self, request, *args, **kwargs):
+        """
+        ## List the subcategories of a category.
+
+        This endpoint allows users to list the subcategories of an existing category identified by its slug.
+        This endpoint can be accessed by **unauthenticated** users or users who do not have
+        **permissions** to **create**, **update**, or **delete** categories. **Requests made with invalid token
+        will receive 401 status code**.
+
+        ### Path Parameters:
+        - `slug`: The unique slug of the category whose subcategories are to be listed.
+
+        ### Responses:
+        - 200: Successfully listed the subcategories of the category. Returns a list of subcategory objects.
+        - 401: Unauthorized. Trying to make a request with invalid token.
+        - 404: Not found. The requested category does not exist.
+        - *For more information about responses please check response examples in swagger.*
+        """
+
+        subcategories = self.get_object().subcategories
+        serializer = SubCategorySerializer(subcategories, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
         responses={
             200: CategorySerializer,
             401: CategorySerializer,
@@ -109,27 +131,19 @@ class CategoryViewSet(ModelViewSet):
 
         This endpoint allows users to retrieve an existing category identified by its slug.
         This endpoint can be accessed by **unauthenticated** users or users who do not have
-        **permissions** to **create**, **update**, or **delete** categories. However, they will only
-        have **read-only** access to this endpoint. **Also requests made with invalid token will receive
-        401 status code**.
+        **permissions** to **create**, **update**, or **delete** categories. **Requests made
+        with invalid token will receive 401 status code**.
 
         ### Path Parameters:
         - `slug`: The unique slug of the category to be retrieved.
 
-        ### Query Parameters:
-        - `with_children` (optional): When set to `true`, includes subcategories of the
-        retrieved category in the response.
-
         ### Responses:
         - 200: The category was successfully retrieved. Returns the details of the category.
-        - 401: Unauthorized. Authentication credentials were invalid.
+        - 401: Unauthorized. Trying to make a request with invalid token.
         - 404: Not found. The requested category does not exist.
         - *For more information about responses please check response examples in swagger.*
         """
-        instance = self.get_object()
-        serializer_class = self.get_serializer_class()
-        serializer = serializer_class(instance, context={"request": request})
-        return Response(serializer.data)
+        return super().retrieve(request, *args, **kwargs)
 
     @extend_schema(
         responses={

@@ -42,7 +42,7 @@ def list_category_examples():
         ),
         OpenApiExample(
             "Valid example (GET Response) - Empty list",
-            summary="List categories - Empty response",
+            summary="No categories",
             description="Example of listing categories when there are no categories in DB.",
             value=[],
             response_only=True,
@@ -55,6 +55,77 @@ def list_category_examples():
             value={"detail": "Invalid token."},
             response_only=True,
             status_codes=[401],
+        ),
+    ]
+
+
+def list_subcategories_examples():
+    """
+    Provides examples for retrieving subcategories of category.
+
+    Returns:
+        List[OpenApiExample]: A list of response examples for retrieving a category.
+
+    Example Usage:
+        @extend_schema(examples=retrieve_category_examples())
+        def subcategories(self, request, *args, **kwargs):
+            pass
+    """
+
+    return [
+        OpenApiExample(
+            "Valid example 1 (GET Response)",
+            summary="Retrieve subcategories response",
+            description="Example of retrieving subcategories with `GET` request.",
+            value=[
+                {
+                    "id": 2,
+                    "name": "First subcategory name",
+                    "slug": "first-subcategory-name",
+                    "description": "Description for first subcategory.",
+                    "image": None,
+                },
+                {
+                    "id": 3,
+                    "name": "Second subcategory name",
+                    "slug": "second-subcategory-name",
+                    "description": "Description for second subcategory.",
+                    "image": None,
+                },
+                {
+                    "id": 4,
+                    "name": "Third subcategory name",
+                    "slug": "third-subcategory-name",
+                    "description": "Description for third subcategory.",
+                    "image": None,
+                },
+            ],
+            response_only=True,
+            status_codes=[200],
+        ),
+        OpenApiExample(
+            "Valid example 2 (GET Response)",
+            summary="No subcategories",
+            description="Example of retrieving subcategories of a category that has no subcategories.",
+            value=[],
+            response_only=True,
+            status_codes=[200],
+        ),
+        OpenApiExample(
+            "Valid example 3 (Response)",
+            summary="Retrieving subcategories with invalid token",
+            description="This example demonstrates the response after trying to retrieve a category with invalid token.",
+            value={"detail": "Invalid token."},
+            response_only=True,
+            status_codes=[401],
+        ),
+        OpenApiExample(
+            "Valid example 4 (GET Response)",
+            summary="Retrieve subcategories of non-existing category",
+            description="Example of retrieving subcategories of category that does not exist.",
+            value={"detail": "Not found."},
+            response_only=True,
+            status_codes=[404],
         ),
     ]
 
@@ -89,40 +160,7 @@ def retrieve_category_examples():
             status_codes=[200],
         ),
         OpenApiExample(
-            "Valid example 2 (GET Response)",
-            summary="Retrieve category with subcategories",
-            description="Example of retrieving a category alongside with its subcategories using `GET` request.",
-            value={
-                "id": 1,
-                "name": "Some Category",
-                "slug": "some-category",
-                "description": "Description for the category",
-                "image": "category_image.jpg",
-                "parent": None,
-                "subcategories": [
-                    {
-                        "id": 2,
-                        "name": "First Subcategory",
-                        "slug": "first-subcategory",
-                        "description": "Description for the subcategory",
-                        "image": "subcategory_image.jpg",
-                        "parent": 1,
-                    },
-                    {
-                        "id": 3,
-                        "name": "Second Subcategory",
-                        "slug": "second-subcategory",
-                        "description": "Description for the subcategory",
-                        "image": "subcategory_image.jpg",
-                        "parent": 1,
-                    },
-                ],
-            },
-            response_only=True,
-            status_codes=[200],
-        ),
-        OpenApiExample(
-            "Valid example 3 (Response)",
+            "Valid example 2 (Response)",
             summary="Retrieving category with invalid token",
             description="This example demonstrates the response after trying to retrieve a category with invalid token.",
             value={"detail": "Invalid token."},
@@ -130,7 +168,7 @@ def retrieve_category_examples():
             status_codes=[401],
         ),
         OpenApiExample(
-            "Valid example 4 (GET Response)",
+            "Valid example 3 (GET Response)",
             summary="Retrieve non-existing category",
             description="Example of retrieving a category that does not exist.",
             value={"detail": "Not found."},

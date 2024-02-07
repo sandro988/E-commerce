@@ -90,28 +90,7 @@ class CategorySerializer(serializers.ModelSerializer):
         return data
 
 
-class CategoryWithSubcategoriesSerializer(serializers.ModelSerializer):
-    """
-    Serializer for retrieving a category with its subcategories.
-
-    This serializer includes the basic category fields along with a list of its subcategories.
-    """
-
-    subcategories = serializers.SerializerMethodField()
-
+class SubCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = [
-            "id",
-            "name",
-            "slug",
-            "description",
-            "image",
-            "parent",
-            "subcategories",
-        ]
-
-    def get_subcategories(self, instance):
-        subcategories = instance.subcategories.all()
-        serializer = CategorySerializer(subcategories, many=True)
-        return serializer.data
+        fields = ["id", "name", "slug", "description", "image"]
