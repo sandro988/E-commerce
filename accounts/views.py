@@ -20,6 +20,7 @@ from openapi.account_examples import (
     update_user_account_examples,
     partial_update_user_account_examples,
 )
+from accounts.permissions import IsNotAuthenticated
 
 
 class SignUpAPIView(CreateAPIView):
@@ -36,19 +37,10 @@ class SignUpAPIView(CreateAPIView):
 
     serializer_class = SignUpSerializer
     permission_classes = [
-        AllowAny,
+        IsNotAuthenticated
     ]
 
     def create(self, request, *args, **kwargs):
-        # Authenticated should not be allowed to create new account.
-        if request.user.is_authenticated:
-            return Response(
-                {
-                    "message": "Authenticated users cannot create new accounts. Please sign out to proceed with sign up."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)

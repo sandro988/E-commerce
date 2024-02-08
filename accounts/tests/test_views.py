@@ -277,16 +277,13 @@ class SignUpTests(APITestCase):
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(len(mail.outbox), 0)
         self.assertIsNotNone(
             User.objects.get(email="authenticated_user@email.com")
         )  # Authenticated user
         self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(
-            response.data.get("message"),
-            "Authenticated users cannot create new accounts. Please sign out to proceed with sign up.",
-        )
+        self.assertIn("You do not have permission to perform this action.", response.data.get("detail"))
 
 
 class AuthenticationTests(APITestCase):
