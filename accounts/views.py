@@ -15,30 +15,43 @@ from accounts.serializers import (
 )
 from accounts.tasks import send_one_time_password_to_user, send_already_verified_email
 from accounts.models import OTP, CustomUser
+from accounts.permissions import IsNotAuthenticated
 from openapi.account_examples import (
     retrieve_user_examples,
     update_user_account_examples,
     partial_update_user_account_examples,
+    user_signup_examples,
 )
-from accounts.permissions import IsNotAuthenticated
 
 
+@extend_schema(
+    responses={
+        201: SignUpSerializer,
+        400: SignUpSerializer,
+        403: SignUpSerializer,
+    },
+    examples=user_signup_examples(),
+)
 class SignUpAPIView(CreateAPIView):
     """
-    Endpoint for user registration.
+    ## Register a new user.
 
-    Accepts POST requests with user data in the request body. Creates a new user with the provided data if valid.
+    This endpoint allows unauthenticated users to register a new account and
+    sends a one-time code to the user's email for account verification.
 
-    Sends a one-time code to the user's email for account verification.
-    Returns a success response with a message and status code 201 if successful.
-    
-    **Already authenticated users can not create new users.**
+    ### Request Body Fields:
+    - **email (str)**: User's email address.
+    - **password (str)**: User's password.
+
+    ### Responses:
+    - 201: Successfully created a new user. Returns a success message.
+    - 400: Bad Request. If the request body is invalid, missing data, contains duplicate email.
+    - 403: Forbidden. If an authenticated user tries to create a new account.
+    - *For more information about responses, please refer to the examples.*
     """
 
     serializer_class = SignUpSerializer
-    permission_classes = [
-        IsNotAuthenticated
-    ]
+    permission_classes = [IsNotAuthenticated]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

@@ -283,7 +283,10 @@ class SignUpTests(APITestCase):
             User.objects.get(email="authenticated_user@email.com")
         )  # Authenticated user
         self.assertEqual(User.objects.count(), 1)
-        self.assertIn("You do not have permission to perform this action.", response.data.get("detail"))
+        self.assertIn(
+            "You do not have permission to perform this action.",
+            response.data.get("detail"),
+        )
 
 
 class AuthenticationTests(APITestCase):
