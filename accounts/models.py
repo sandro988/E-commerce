@@ -24,7 +24,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=128, blank=True, null=True)
-    phone_number = PhoneNumberField(max_length=13, blank=True)
+    phone_number = PhoneNumberField(max_length=13, blank=True, null=True)
     birthdate = models.DateField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     profile_image = models.ImageField(

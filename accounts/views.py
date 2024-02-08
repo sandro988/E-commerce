@@ -15,7 +15,11 @@ from accounts.serializers import (
 )
 from accounts.tasks import send_one_time_password_to_user, send_already_verified_email
 from accounts.models import OTP, CustomUser
-from accounts.decorators import user_endpoint_docstring
+from openapi.account_examples import (
+    retrieve_user_examples,
+    update_user_account_examples,
+    partial_update_user_account_examples,
+)
 
 
 class SignUpAPIView(CreateAPIView):
@@ -166,15 +170,71 @@ class CustomUserDetailsView(UserDetailsView):
     parser_classes = (JSONParser, MultiPartParser)
     serializer_class = CustomUserDetailsSerializer
 
-    @user_endpoint_docstring("API endpoint for User retrieval.")
+    @extend_schema(
+        responses={
+            200: CustomUserDetailsSerializer,
+            401: CustomUserDetailsSerializer,
+        },
+        examples=retrieve_user_examples(),
+    )
     def get(self, request, *args, **kwargs):
+        """
+        ## Retrieve user account details.
+
+        This endpoint allows users to retrieve their account details.
+
+        ### Fields:
+        - **id (str)**: Universally Unique Identifier (UUID) representing the user's ID.
+        - **email (str)**: User's email address.
+        - **full_name (str)**: User's full name.
+        - **phone_number (str)**: User's phone number.
+        - **birthdate (str)**: User's birthdate in "YYYY-MM-DD" format.
+        - **address (str)**: User's address.
+        - **profile_image (str)**: Image or null if not set.
+        - **preferred_currency (str)**: User's preferred currency.
+        - **is_subscribed_to_newsletter (bool)**: Indicates whether the user is subscribed to the newsletter.
+        - **is_verified (bool)**: Indicates whether the user's account is verified via email or not.
+        
+        ### Responses:
+        - 200: Successful retrieval. Returns the user account data.
+        - 401: Unauthorized. Authentication credentials were not provided or are invalid.
+        - *For more information about responses, please refer to the examples below.*
+        """
         return super().get(request, *args, **kwargs)
 
-    @user_endpoint_docstring(
-        "API endpoint for User update.",
-        exclude_fields=["id", "email", "is_verified"],
+    @extend_schema(
+        responses={
+            200: CustomUserDetailsSerializer,
+            400: CustomUserDetailsSerializer,
+            401: CustomUserDetailsSerializer,
+        },
+        examples=update_user_account_examples(),
     )
     def put(self, request, *args, **kwargs):
+        """
+        ## Update user account.
+
+        This endpoint allows users to update their account details.
+
+        ### Request Body:
+        - JSON object representing the updated user account.
+
+        ### Fields:
+        - **email (str)**: User's email address.
+        - **full_name (str)**: User's full name.
+        - **phone_number (str)**: User's phone number.
+        - **birthdate (str)**: User's birthdate in "YYYY-MM-DD" format.
+        - **address (str)**: User's address.
+        - **profile_image (str)**: Image or null if not set.
+        - **preferred_currency (str)**: User's preferred currency.
+        - **is_subscribed_to_newsletter (bool)**: Indicates whether the user is subscribed to the newsletter.
+
+        ### Responses:
+        - 200: Successful update. Returns the updated user account data.
+        - 400: Bad request. The request body is invalid or contains errors. See response body examples for details.
+        - 401: Unauthorized. Authentication credentials were not provided or are invalid.
+        - *For more information about responses, please refer to the examples below.*
+        """
         if "is_verified" in request.data:
             return Response(
                 {"error": "This field is read-only."},
@@ -182,11 +242,39 @@ class CustomUserDetailsView(UserDetailsView):
             )
         return super().put(request, *args, **kwargs)
 
-    @user_endpoint_docstring(
-        "API endpoint for partial user update.",
-        exclude_fields=["id", "email", "is_verified"],
+    @extend_schema(
+        responses={
+            200: CustomUserDetailsSerializer,
+            400: CustomUserDetailsSerializer,
+            401: CustomUserDetailsSerializer,
+        },
+        examples=partial_update_user_account_examples(),
     )
     def patch(self, request, *args, **kwargs):
+        """
+        ## Update user account.
+
+        This endpoint allows users to update their account details.
+
+        ### Request Body:
+        - JSON object representing the updated user account.
+
+        ### Fields:
+        - **email (str)**: User's email address.
+        - **full_name (str)**: User's full name.
+        - **phone_number (str)**: User's phone number.
+        - **birthdate (str)**: User's birthdate in "YYYY-MM-DD" format.
+        - **address (str)**: User's address.
+        - **profile_image (str)**: Image or null if not set.
+        - **preferred_currency (str)**: User's preferred currency.
+        - **is_subscribed_to_newsletter (bool)**: Indicates whether the user is subscribed to the newsletter.
+
+        ### Responses:
+        - 200: Successful update. Returns the updated user account data.
+        - 400: Bad request. The request body is invalid or contains errors. See response body examples for details.
+        - 401: Unauthorized. Authentication credentials were not provided or are invalid.
+        - *For more information about responses, please refer to the examples below.*
+        """
         if "is_verified" in request.data:
             return Response(
                 {"error": "This field is read-only."},
