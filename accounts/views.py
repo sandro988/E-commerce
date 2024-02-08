@@ -30,6 +30,8 @@ class SignUpAPIView(CreateAPIView):
 
     Sends a one-time code to the user's email for account verification.
     Returns a success response with a message and status code 201 if successful.
+    
+    **Already authenticated users can not create new users.**
     """
 
     serializer_class = SignUpSerializer
@@ -38,11 +40,20 @@ class SignUpAPIView(CreateAPIView):
     ]
 
     def create(self, request, *args, **kwargs):
+        # Authenticated should not be allowed to create new account.
+        if request.user.is_authenticated:
+            return Response(
+                {
+                    "message": "Authenticated users cannot create new accounts. Please sign out to proceed with sign up."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        # Celery task for resending verification email to user.
+        # Celery task for sending verification email to user.
         send_one_time_password_to_user.delay(user.id)
 
         return Response(
@@ -194,7 +205,7 @@ class CustomUserDetailsView(UserDetailsView):
         - **preferred_currency (str)**: User's preferred currency.
         - **is_subscribed_to_newsletter (bool)**: Indicates whether the user is subscribed to the newsletter.
         - **is_verified (bool)**: Indicates whether the user's account is verified via email or not.
-        
+
         ### Responses:
         - 200: Successful retrieval. Returns the user account data.
         - 401: Unauthorized. Authentication credentials were not provided or are invalid.

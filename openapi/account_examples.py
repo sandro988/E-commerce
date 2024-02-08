@@ -1,7 +1,6 @@
 from drf_spectacular.openapi import OpenApiExample
 
 
-
 def retrieve_user_examples():
     """
     Provides examples for retrieving user.
@@ -14,7 +13,7 @@ def retrieve_user_examples():
         def get(self, request, *args, **kwargs):
             pass
     """
-    
+
     return [
         OpenApiExample(
             "Valid example 1 (GET Response)",
@@ -52,7 +51,7 @@ def retrieve_user_examples():
             status_codes=[401],
         ),
     ]
-    
+
 
 def update_user_account_examples():
     """
@@ -211,6 +210,7 @@ def update_user_account_examples():
             status_codes=[401],
         ),
     ]
+
 
 def partial_update_user_account_examples():
     """

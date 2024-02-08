@@ -263,6 +263,31 @@ class SignUpTests(APITestCase):
         self.assertFalse(User.objects.last().is_verified)
         self.assertIsNone(OTP.objects.last())
 
+    def test_signup_with_authenticated_user(self):
+        user = User.objects.create_user(
+            email="authenticated_user@email.com",
+            password="authenticated_user_pass",
+        )
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+        response = self.client.post(
+            self.signup_url,
+            self.correct_user_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertIsNotNone(
+            User.objects.get(email="authenticated_user@email.com")
+        )  # Authenticated user
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(
+            response.data.get("message"),
+            "Authenticated users cannot create new accounts. Please sign out to proceed with sign up.",
+        )
+
 
 class AuthenticationTests(APITestCase):
     @classmethod
