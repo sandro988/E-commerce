@@ -8,6 +8,7 @@ from dj_rest_auth.serializers import (
     UserDetailsSerializer,
     PasswordResetSerializer,
 )
+from phonenumber_field.serializerfields import PhoneNumberField
 from .forms import CustomPasswordResetForm
 
 
@@ -85,6 +86,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     """
 
     is_verified = serializers.BooleanField(read_only=True)
+    phone_number = PhoneNumberField(region="GE")
 
     class Meta(UserDetailsSerializer.Meta):
         model = User

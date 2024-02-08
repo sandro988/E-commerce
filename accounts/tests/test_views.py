@@ -388,7 +388,7 @@ class UserDetailViewTests(APITestCase):
             email="test_user@email.com",
             password="test_pass",
             full_name="John Doe",
-            phone_number="+1-202-555-0142",
+            phone_number="+995-599-654-321",
             birthdate="1998-08-18",
             address="United States, Florida, Opa-locka, 3990 NW 132nd St",
             preferred_currency="USD",
@@ -398,7 +398,7 @@ class UserDetailViewTests(APITestCase):
         cls.put_request_data = {
             "email": "test_user@email.com",
             "full_name": "Maia Koelpin IV",
-            "phone_number": "+1-202-555-0110",
+            "phone_number": "+995-599-123-456",
             "birthdate": "1977-08-28",
             "address": "United States, New Jersey, Newton, 82 Pond St",
             "profile_image": None,
@@ -408,6 +408,7 @@ class UserDetailViewTests(APITestCase):
         cls.patch_request_data = {
             "full_name": "Maia Koelpin IV",
             "preferred_currency": "GEL",
+            "address": "Georgia, Tbilisi",
             "is_subscribed_to_newsletter": True,
         }
 
@@ -449,7 +450,7 @@ class UserDetailViewTests(APITestCase):
         user_data = response.data
         self.assertEqual(user_data["full_name"], "Maia Koelpin IV")
         self.assertEqual(
-            user_data["phone_number"], "+12025550110"
+            user_data["phone_number"], "+995599123456"
         )  # in database phone numbers are saved without dashes.
         self.assertEqual(user_data["birthdate"], "1977-08-28")
         self.assertEqual(
@@ -472,6 +473,7 @@ class UserDetailViewTests(APITestCase):
         user_data = response.data
         self.assertEqual(user_data["full_name"], "Maia Koelpin IV")
         self.assertEqual(user_data["preferred_currency"], "GEL")
+        self.assertEqual(user_data["address"], "Georgia, Tbilisi")
         self.assertEqual(user_data["is_subscribed_to_newsletter"], True)
 
     def test_user_details_with_unauthenticated_user(self):
@@ -520,6 +522,17 @@ class UserDetailViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIsNotNone(response.data.get("error"))
+
+    def test_update_with_invalid_phone_number(self):
+        self.patch_request_data["phone_number"] = "06 118 2427"
+        response = self.client.patch(
+            self.url,
+            self.patch_request_data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotEqual(User.objects.last().phone_number, "06 118 2427")
 
 
 class PasswordChangeTests(APITestCase):

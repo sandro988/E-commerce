@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
-from .openapi.examples import (
+from openapi.category_examples import (
     list_category_examples,
     list_subcategories_examples,
     retrieve_category_examples,

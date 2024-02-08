@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 from dj_rest_auth.views import UserDetailsView, LogoutView
+from drf_spectacular.utils import extend_schema
 from accounts.serializers import (
     SignUpSerializer,
     OTPVerificationSerializer,
@@ -147,6 +148,7 @@ class CustomLogoutView(LogoutView):
     If the user is not authenticated, it returns a response indicating that they are already
     logged out. Otherwise, it proceeds with the original logout logic.
     """
+
     serializer_class = None
 
     def logout(self, request):
