@@ -288,6 +288,20 @@ class SignUpTests(APITestCase):
             response.data.get("detail"),
         )
 
+    def test_only_alphabetic_password(self):
+        self.incorrect_user_data["password"] = "onlyalphabeticcharacters"
+        response = self.client.post(
+            self.signup_url, self.incorrect_user_data, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_only_special_characters_password(self):
+        self.incorrect_user_data["password"] = "$!@#%&*()-+=,.'\|[]{}"
+        response = self.client.post(
+            self.signup_url, self.incorrect_user_data, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class AuthenticationTests(APITestCase):
     @classmethod

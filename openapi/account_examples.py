@@ -378,12 +378,26 @@ def user_signup_examples():
         OpenApiExample(
             "Valid example 5 (POST Request)",
             summary="Create user with invalid data(4)",
+            description="This example demonstrates the request with only alphabetical characters.",
+            value={"email": "invalid_email.com", "password": "abcdefghijkl"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            "Valid example 6 (POST Request)",
+            summary="Create user with invalid data(5)",
+            description="This example demonstrates the request with only special characters.",
+            value={"email": "invalid_email.com", "password": "$!@#%&*()-+=,.'\|[]"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            "Valid example 7 (POST Request)",
+            summary="Create user with invalid data(6)",
             description="This example demonstrates the request with missing email of password field.",
             value={"email": "invalid_email.com"},
             request_only=True,
         ),
         OpenApiExample(
-            "Valid example 6 (POST Response)",
+            "Valid example 8 (POST Response)",
             summary="Create user",
             description="This example demonstrates the response for successfully creating user.",
             value={
@@ -393,7 +407,7 @@ def user_signup_examples():
             status_codes=[201],
         ),
         OpenApiExample(
-            "Valid example 7 (POST Response)",
+            "Valid example 9 (POST Response)",
             summary="Create user with duplicate email",
             description="This example demonstrates the response for creating user with an already existing email.",
             value={"email": ["custom user with this email already exists."]},
@@ -401,7 +415,7 @@ def user_signup_examples():
             status_codes=[400],
         ),
         OpenApiExample(
-            "Valid example 8 (POST Response)",
+            "Valid example 10 (POST Response)",
             summary="Create user with invalid email",
             description="This example demonstrates the response for creating user with an invalid email.",
             value={"email": ["Enter a valid email address."]},
@@ -409,7 +423,7 @@ def user_signup_examples():
             status_codes=[400],
         ),
         OpenApiExample(
-            "Valid example 9 (POST Response)",
+            "Valid example 11 (POST Response)",
             summary="Create user with short password",
             description="This example demonstrates the response for creating user with a password that is less than 8 characters.",
             value={
@@ -421,7 +435,7 @@ def user_signup_examples():
             status_codes=[400],
         ),
         OpenApiExample(
-            "Valid example 10 (POST Response)",
+            "Valid example 12 (POST Response)",
             summary="Create user with too common password",
             description="This example demonstrates the response for creating user with a password that is too common. (e.g. 'password').",
             value={"password": ["This password is too common."]},
@@ -429,7 +443,7 @@ def user_signup_examples():
             status_codes=[400],
         ),
         OpenApiExample(
-            "Valid example 11 (POST Response)",
+            "Valid example 13 (POST Response)",
             summary="Create user with entirely numeric password",
             description="This example demonstrates the response for creating user with a password that has only numeric values.",
             value={"password": ["This password is entirely numeric."]},
@@ -437,7 +451,29 @@ def user_signup_examples():
             status_codes=[400],
         ),
         OpenApiExample(
-            "Valid example 12 (POST Response)",
+            "Valid example 14 (POST Response)",
+            summary="Create user with entirely alphabetical password",
+            description="This example demonstrates the response for creating user with a password that has only alphabetical characters.",
+            value={
+                "password": [
+                    "The password cannot consist only of alphabetic characters."
+                ]
+            },
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 15 (POST Response)",
+            summary="Create user with only special character password",
+            description="This example demonstrates the response for creating user with a password that has only special characters.",
+            value={
+                "password": ["The password cannot consist only of special characters."]
+            },
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 16 (POST Response)",
             summary="Create user with missing fields",
             description="This example demonstrates the response for creating user with a missing **password**.",
             value={"password": ["This field is required."]},
@@ -445,7 +481,7 @@ def user_signup_examples():
             status_codes=[400],
         ),
         OpenApiExample(
-            "Valid example 13 (POST Response)",
+            "Valid example 17 (POST Response)",
             summary="Create user while authenticated",
             description="This example demonstrates the response for creating user while being authenticated. only the **unauthenticated** \
                 should be allowed to create new accounts.",
