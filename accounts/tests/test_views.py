@@ -127,7 +127,7 @@ class SignUpTests(APITestCase):
         )
         self.assertEqual(signup_response.status_code, status.HTTP_201_CREATED)
 
-        verification_response = self.client.post(
+        verification_response = self.client.post(  # Sending incorrect email and OTP.
             self.verification_url,
             {
                 "email": "incorrect_data@email.com",
@@ -135,20 +135,35 @@ class SignUpTests(APITestCase):
             },
             format="json",
         )
-        self.assertEqual(verification_response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(
-            verification_response.data,
-            {"message": "User or OTP code is not correct. Please try again later."},
+        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "OTP should consist only of numeric values.",
+            str(verification_response.data.get("otp_code")),
         )
         self.assertEqual(
             OTP.objects.count(), 1
         )  # OTP should not be deleted when verification fails.
 
-        verification_response = self.client.post(
+        verification_response = self.client.post(  # Sending incorrect OTP.
             self.verification_url,
             {
                 "email": mail.outbox[0].to[0],
-                "otp_code": "######",
+                "otp_code": "123",
+            },
+            format="json",
+        )
+        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "OTP should be exactly 6 characters long.",
+            str(verification_response.data.get("otp_code")),
+        )
+        self.assertEqual(OTP.objects.count(), 1)
+
+        verification_response = self.client.post(  # Sending incorrect email.
+            self.verification_url,
+            {
+                "email": "incorrect_data@email.com",
+                "otp_code": self.get_otp_from_mail(mail.outbox[0]),
             },
             format="json",
         )
@@ -236,17 +251,48 @@ class SignUpTests(APITestCase):
             {"message": "User not found."},
         )
 
-    def test_verification_code_expired(self):
+    def test_verification_with_expired_otp(self):
         self.client.post(
             self.signup_url,
             self.correct_user_data,
             format="json",
         )
 
+        # Expiring OTP
         verification_code = OTP.objects.last()
         verification_code.expiry_timestamp = timezone.now() - timedelta(days=1)
         verification_code.save()
-        delete_expired_otps()  # Calling periodic task for deleting expired OTP's.
+
+        verification_data = {
+            "email": verification_code.user.email,
+            "otp_code": verification_code.code,
+        }
+
+        verification_response = self.client.post(
+            self.verification_url,
+            verification_data,
+            format="json",
+        )
+
+        self.assertEqual(verification_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(User.objects.last().is_verified)
+        self.assertEqual(
+            verification_response.data.get("message"),
+            "User or OTP code is not correct. Please try again later.",
+        )
+
+    def test_expired_otp_delete(self):
+        self.client.post(
+            self.signup_url,
+            self.correct_user_data,
+            format="json",
+        )
+
+        # Expiring OTP
+        verification_code = OTP.objects.last()
+        verification_code.expiry_timestamp = timezone.now() - timedelta(days=1)
+        verification_code.save()
+        delete_expired_otps()  # Calling periodic task for deleting expired OTP.
 
         verification_data = {
             "email": mail.outbox[0].to[0],

@@ -21,6 +21,7 @@ from openapi.account_examples import (
     update_user_account_examples,
     partial_update_user_account_examples,
     user_signup_examples,
+    otp_verification_examples,
 )
 
 
@@ -74,12 +75,30 @@ class SignUpAPIView(CreateAPIView):
         return user
 
 
+@extend_schema(
+    responses={
+        200: OTPVerificationSerializer,
+        400: OTPVerificationSerializer,
+        404: OTPVerificationSerializer,
+    },
+    examples=otp_verification_examples(),
+)
 class OTPVerificationView(APIView):
     """
-    API View for verifying a user based on an OTP code.
-    This view allows users to verify their accounts by providing a valid OTP code
-    along with their email. If the provided OTP code is valid and the user is not
-    already verified, the user will be marked as verified.
+    ## Verify user with OTP code.
+
+    This endpoint allows users to verify their accounts by providing a valid OTP code along with their email.
+    If the provided OTP code is valid and the user is not already verified, the user will be marked as verified.
+
+    ### Request Body Fields:
+    - **email (str)**: User's email address.
+    - **otp_code (str)**: One-time password sent to the user's email.
+
+    ### Responses:
+    - 200: Successful verification. Returns a success message.
+    - 400: Bad Request. If the provided OTP code is incorrect or expired, or if the request body is invalid/empty.
+    - 404: Not Found. If the provided email or OTP code is not associated with any user.
+    - *For more information about responses, please refer to the examples.*
     """
 
     serializer_class = OTPVerificationSerializer
@@ -104,6 +123,13 @@ class OTPVerificationView(APIView):
                 )
 
             otp = OTP.objects.get(user__email=email, code=otp_code)
+            if otp.is_expired():
+                return Response(
+                    {
+                        "message": "User or OTP code is not correct. Please try again later."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except (CustomUser.DoesNotExist, OTP.DoesNotExist):
             return Response(
                 {"message": "User or OTP code is not correct. Please try again later."},

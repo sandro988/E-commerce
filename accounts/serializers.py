@@ -36,7 +36,18 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class OTPVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    otp_code = serializers.CharField(max_length=6)
+    otp_code = serializers.CharField()
+
+    def validate_otp_code(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError(
+                "OTP should consist only of numeric values."
+            )
+        if len(value) != 6:
+            raise serializers.ValidationError(
+                "OTP should be exactly 6 characters long."
+            )
+        return value
 
 
 class ResendVerificationCodeSerializer(serializers.Serializer):

@@ -490,3 +490,111 @@ def user_signup_examples():
             status_codes=[403],
         ),
     ]
+
+
+def otp_verification_examples():
+    """
+    Provides examples for OTP verification.
+
+    Returns:
+        List[OpenApiExample]: A list of response examples for OTP verification.
+
+    Example Usage:
+        @extend_schema(examples=otp_verification_examples())
+            class OTPVerificationView(APIView):
+                pass
+    """
+
+    return [
+        OpenApiExample(
+            "Valid example 1 (POST Request)",
+            summary="Verify user with valid OTP",
+            description="This example demonstrates the request with a valid OTP code for verifying the user.",
+            value={"email": "user@example.com", "otp_code": "123456"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            "Valid example 2 (POST Request)",
+            summary="Verify user with invalid OTP",
+            description="This example demonstrates the request with an invalid OTP code for verifying the user. \
+                The OTP should be only **six** characters long and consist only of **numerical** characters.",
+            value={"email": "user@example.com", "otp_code": "654321-abcdef"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            "Valid example 3 (POST Response)",
+            summary="User successfully verified",
+            description="This example demonstrates the response for successfully verifying the user.",
+            value={"message": "User successfully verified."},
+            response_only=True,
+            status_codes=[200],
+        ),
+        OpenApiExample(
+            "Valid example 4 (POST Response)",
+            summary="User already verified",
+            description="This example demonstrates the response when the user is already verified. \
+                but tries to verify again or verify other user.",
+            value={
+                "message": "User or OTP code is not correct. Please try again later."
+            },
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 5 (POST Response)",
+            summary="Invalid format for email",
+            description="This example demonstrates the response when the user enters an email that \
+                is of invalid format. (e.g. `test_user.gmail.com`, does not have `@`.)",
+            value={"email": ["Enter a valid email address."]},
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 6 (POST Response)",
+            summary="Invalid format for OTP",
+            description="This example demonstrates the response when the user enters an OTP that \
+                of invalid format. (e.g. `654321-abcdef` or `123`, is not **six** characters long \
+                and has characters other than **numeric** values.). The message for this response \
+                can be either of the two listed above but not both simultaneously.",
+            value={
+                "otp_code": [
+                    "OTP should consist only of numeric values.",
+                    "OTP should be exactly 6 characters long.",
+                ],
+            },
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 7 (POST Response)",
+            summary="Missing fields",
+            description="This example demonstrates the response when the user sends an **empty** or \
+                **partially empty** data.",
+            value={
+                "email": ["This field is required."],
+                "otp_code": ["This field is required."],
+            },
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 8 (POST Response)",
+            summary="Expired OTP",
+            description="This example demonstrates the response when the user sends an **expired** OTP.",
+            value={
+                "message": "User or OTP code is not correct. Please try again later."
+            },
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 9 (POST Response)",
+            summary="Invalid user or OTP code",
+            description="This example demonstrates the response when the provided user or OTP code is incorrect.",
+            value={
+                "message": "User or OTP code is not correct. Please try again later."
+            },
+            response_only=True,
+            status_codes=[404],
+        ),
+    ]
