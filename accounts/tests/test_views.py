@@ -219,16 +219,14 @@ class SignUpTests(APITestCase):
             format="json",
         )  # Resending verification code for an user who is already verified
 
-        self.assertEqual(resend_verification_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            resend_verification_response.status_code, status.HTTP_400_BAD_REQUEST
+        )
         self.assertEqual(
             resend_verification_response.data,
-            {"message": "Verification code resent successfully."},
+            {"message": "User already verified."},
         )
         self.assertEqual(OTP.objects.count(), 0)
-        self.assertIn(
-            "You're receiving this e-mail because you or someone else has attempted to re-verify your user account at E-commerce API.",
-            mail.outbox[2].body,
-        )
 
     def test_resend_verification_with_incorrect_data(self):
         signup_response = self.client.post(
@@ -245,7 +243,7 @@ class SignUpTests(APITestCase):
             },
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(
             response.data,
             {"message": "User not found."},

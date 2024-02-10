@@ -22,6 +22,7 @@ from openapi.account_examples import (
     partial_update_user_account_examples,
     user_signup_examples,
     otp_verification_examples,
+    otp_verification_resend_examples,
 )
 
 
@@ -145,11 +146,33 @@ class OTPVerificationView(APIView):
         )
 
 
+@extend_schema(
+    responses={
+        200: ResendVerificationCodeSerializer,
+        400: ResendVerificationCodeSerializer,
+        404: ResendVerificationCodeSerializer,
+        500: ResendVerificationCodeSerializer,
+    },
+    examples=otp_verification_resend_examples(),
+)
 class ResendVerificationCodeView(APIView):
     """
-    API View for resending a verification code to a user.
-    This view allows users to request a new verification code if they did not
-    receive the initial code or if the code has expired.
+    ## Resend Verification Code.
+
+    This endpoint allows users to request a new verification code if they did not receive the initial code or if
+    the code has expired. This view triggers a Celery task to resend the verification email to the user's email
+    address asynchronously.
+
+    ### Request Body Fields:
+    - **email (str)**: User's email address.
+
+    ### Responses:
+    - 200: Successful resend. Returns a success message.
+    - 400: Bad Request. If the email provided is invalid or the user is already verified.
+    - 404: Not Found. If the user with the provided email address does not exist.
+    - 500: Internal Server Error. If there is a problem with the server while processing the request.
+    - *For more information about responses, please refer to the examples.*
+
     """
 
     serializer_class = ResendVerificationCodeSerializer
@@ -163,10 +186,9 @@ class ResendVerificationCodeView(APIView):
         try:
             user = CustomUser.objects.get(email=email)
             if user.is_verified:
-                send_already_verified_email.delay(email)
                 return Response(
-                    {"message": "Verification code resent successfully."},
-                    status=status.HTTP_200_OK,
+                    {"message": "User already verified."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             # Celery task for resending verification email to user.
@@ -179,9 +201,10 @@ class ResendVerificationCodeView(APIView):
 
         except CustomUser.DoesNotExist:
             return Response(
-                {"message": "User not found."}, status=status.HTTP_400_BAD_REQUEST
+                {"message": "User not found."}, status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
+            print(e)
             return Response(
                 {"message": "Internal server error."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

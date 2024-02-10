@@ -598,3 +598,71 @@ def otp_verification_examples():
             status_codes=[404],
         ),
     ]
+
+
+def otp_verification_resend_examples():
+    """
+    Provides examples for OTP verification resend functionality.
+
+    Returns:
+        List[OpenApiExample]: A list of response examples for resending verification code..
+
+    Example Usage:
+        @extend_schema(examples=otp_verification_resend_examples())
+            class ResendVerificationCodeView(APIView):
+                pass
+    """
+
+    return [
+        OpenApiExample(
+            "Valid example 1 (POST Request)",
+            summary="Resend verification code",
+            description="This example demonstrates the request for resending verification code.",
+            value={"email": "user@example.com"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            "Valid example 2 (POST Response)",
+            summary="Successful verification resend",
+            description="This example demonstrates the response of resending the verification code.",
+            value={"message": "Verification code resent successfully."},
+            response_only=True,
+            status_codes=[200],
+        ),
+        OpenApiExample(
+            "Valid example 3 (POST Response)",
+            summary="Invalid format for email",
+            description="This example demonstrates the response when the user enters an email that \
+                is of invalid format. (e.g. `test_user.gmail.com`, does not have `@`.)",
+            value={"email": ["Enter a valid email address."]},
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 4 (POST Response)",
+            summary="User already verified",
+            description="This example demonstrates the response of resending the verification code when \
+                user is already verified.",
+            value={"message": "User already verified."},
+            response_only=True,
+            status_codes=[400],
+        ),
+        OpenApiExample(
+            "Valid example 5 (POST Response)",
+            summary="User not found",
+            description="This example demonstrates the response of resending the verification code when \
+                user with specified email does not exist.",
+            value={"message": "User not found."},
+            response_only=True,
+            status_codes=[404],
+        ),
+        OpenApiExample(
+            "Valid example 6 (POST Response)",
+            summary="Internal server error",
+            description="This example demonstrates the response of resending the verification code when \
+                some kind of problem arises on server side.",
+            value={"message": "Internal server error."},
+            response_only=True,
+            status_codes=[500],
+        ),
+    ]
