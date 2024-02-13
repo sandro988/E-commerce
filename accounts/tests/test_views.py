@@ -459,9 +459,7 @@ class AuthenticationTests(APITestCase):
 
         # logging out after we have already logged out
         logout_response = self.client.post(self.logout_url)
-        self.assertEqual(
-            logout_response.data.get("detail"), "You are already logged out."
-        )
+        self.assertEqual(logout_response.data.get("detail"), "You are not logged in.")
 
 
 class UserDetailViewTests(APITestCase):

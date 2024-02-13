@@ -605,7 +605,7 @@ def otp_verification_resend_examples():
     Provides examples for OTP verification resend functionality.
 
     Returns:
-        List[OpenApiExample]: A list of response examples for resending verification code..
+        List[OpenApiExample]: A list of response examples for resending verification code.
 
     Example Usage:
         @extend_schema(examples=otp_verification_resend_examples())
@@ -664,5 +664,39 @@ def otp_verification_resend_examples():
             value={"message": "Internal server error."},
             response_only=True,
             status_codes=[500],
+        ),
+    ]
+
+
+def logout_examples():
+    """
+    Provides examples for logout.
+
+    Returns:
+        List[OpenApiExample]: A list of response examples for logout.
+
+    Example Usage:
+        @extend_schema(examples=logout_examples())
+            class CustomLogoutView(LogoutView):
+                pass
+    """
+
+    return [
+        OpenApiExample(
+            "Valid example 1 (POST Response)",
+            summary="Successful logout",
+            description="This example demonstrates the response of successful logout.",
+            value={"detail": "Successfully logged out."},
+            response_only=True,
+            status_codes=[200],
+        ),
+        OpenApiExample(
+            "Valid example 2 (POST Response)",
+            summary="Already logged out",
+            description="This example demonstrates the response of a scenario where user \
+                **is already logged out/not logged in**, and tries to log out.",
+            value={"detail": "You are not logged in."},
+            response_only=True,
+            status_codes=[200],
         ),
     ]

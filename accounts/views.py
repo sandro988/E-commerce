@@ -23,6 +23,7 @@ from openapi.account_examples import (
     user_signup_examples,
     otp_verification_examples,
     otp_verification_resend_examples,
+    logout_examples,
 )
 
 
@@ -211,11 +212,21 @@ class ResendVerificationCodeView(APIView):
             )
 
 
+@extend_schema(
+    responses=[200],
+    examples=logout_examples(),
+)
 class CustomLogoutView(LogoutView):
     """
-    Inherits from dj-rest-auth LogoutView and adds a check for already logged-out users.
-    If the user is not authenticated, it returns a response indicating that they are already
-    logged out. Otherwise, it proceeds with the original logout logic.
+    ## Custom Logout View.
+
+    This view inherits from dj-rest-auth LogoutView and adds a check for already logged-out users.
+    If the user is not authenticated, it returns a response indicating that they are not logged in.
+    Otherwise, it proceeds with the original logout logic.
+
+    ### Responses:
+    - 200: Logout successful or user already logged out.
+    - *For more information about responses, please refer to the examples.*
     """
 
     serializer_class = None
@@ -223,7 +234,7 @@ class CustomLogoutView(LogoutView):
     def logout(self, request):
         if not request.user.is_authenticated:
             return Response(
-                {"detail": _("You are already logged out.")},
+                {"detail": _("You are not logged in.")},
                 status=status.HTTP_200_OK,
             )
 
